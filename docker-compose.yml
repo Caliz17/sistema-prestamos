@@ -1,11 +1,8 @@
-version: "3.9"
-
 services:
 
   mysql:
     image: mysql:8.0
     container_name: prestamos-mysql
-    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: prestamos_db
@@ -13,6 +10,8 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - prestamos-net
 
   backend:
     build:
@@ -20,26 +19,36 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: prestamos-backend
     volumes:
+      - ./backend:/var/www/backend
       - ./docker/scripts/clone_backend.sh:/usr/local/bin/clone_backend.sh
-      - ./backend:/var/www/backend   # opcional
     depends_on:
       - mysql
     ports:
       - "8000:8000"
-    command: ["bash", "/usr/local/bin/clone_backend.sh"]
+    command: bash /usr/local/bin/clone_backend.sh
+    networks:
+      - prestamos-net
 
   frontend:
-    image: node:20
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.frontend
     container_name: prestamos-frontend
-    working_dir: /var/www
     volumes:
+      - ./frontend:/var/www/frontend
       - ./docker/scripts/clone_frontend.sh:/usr/local/bin/clone_frontend.sh
-      - ./frontend:/var/www/frontend   # opcional
     depends_on:
-      - backend
+      - mysql
     ports:
       - "8001:8001"
-    command: ["bash", "/usr/local/bin/clone_frontend.sh"]
+      - "5173:5173"
+    command: bash /usr/local/bin/clone_frontend.sh
+    networks:
+      - prestamos-net
 
 volumes:
   mysql_data:
+
+networks:
+  prestamos-net:
+    driver: bridge

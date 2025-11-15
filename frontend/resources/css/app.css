@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Opcional para fondos Daisy UI */
+html {
+    background-color: hsl(var(--b1));
+}

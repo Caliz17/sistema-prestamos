@@ -2,11 +2,13 @@ FROM php:8.3-fpm
 
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libonig-dev libzip-dev libxml2-dev netcat-openbsd \
+    nano \
     && docker-php-ext-install pdo_mysql mbstring zip xml gd
+
+# Node 20
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Crear carpetas necesarias con permisos correctos
-RUN mkdir -p /var/www/backend && chown -R www-data:www-data /var/www
-
-WORKDIR /var/www/backend
+WORKDIR /var/www/frontend

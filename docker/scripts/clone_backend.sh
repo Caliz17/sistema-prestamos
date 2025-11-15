@@ -1,35 +1,38 @@
 #!/bin/bash
 
-# Si no existe la carpeta, clonar
-if [ ! -d "/var/www/backend" ]; then
+if [ ! -d "/var/www/backend/.git" ]; then
     echo "Clonando backend..."
+    rm -rf /var/www/backend/*
     git clone https://github.com/Caliz17/prestamos-api.git /var/www/backend
 fi
 
 cd /var/www/backend
 
-echo "Instalando dependencias de Composer..."
+echo "Composer install..."
 composer install
 
-# Crear .env si no existe
 if [ ! -f ".env" ]; then
-    echo "Copiando archivo .env..."
+    echo "Copiando .env..."
     cp .env.example .env
 fi
 
-echo "Generando APP_KEY..."
-php artisan key:generate || true
+echo "Configurando .env para Docker..."
+sed -i "s|DB_HOST=.*|DB_HOST=mysql|" .env
+sed -i "s|DB_DATABASE=.*|DB_DATABASE=prestamos_db|" .env
+sed -i "s|DB_USERNAME=.*|DB_USERNAME=root|" .env
+sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=root|" .env
+sed -i "s|API_URL=.*|API_URL=http://backend:8000/api|" .env
 
-# Esperar que MySQL esté listo
-echo "Esperando a MySQL..."
-until nc -z -v -w30 mysql 3306
-do
-  echo "Esperando base de datos..."
-  sleep 5
+echo "APP_KEY..."
+php artisan key:generate
+
+echo "Esperando MySQL..."
+until nc -z mysql 3306; do
+  sleep 2
 done
 
-echo "Ejecutando migraciones..."
-php artisan migrate --force || true
+echo "Migrando..."
+php artisan migrate --force
 
-echo "Levantando servidor Laravel..."
+echo "Iniciando backend..."
 php artisan serve --host=0.0.0.0 --port=8000
