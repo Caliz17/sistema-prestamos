@@ -12,10 +12,10 @@ fi
 
 echo "Configurando .env para Docker..."
 
-sed -i "s|^APP_URL=.*|APP_URL=http://localhost:8001|" .env
+sed -i "s|^APP_URL=.*|APP_URL=http://localhost:8001/api|" .env
 sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env
-echo "API_URL=http://backend:8000" >> .env
-grep -q "^API_URL=" .env || echo "API_URL=http://backend:8000" >> .env
+echo "API_URL=http://backend:8000/api" >> .env
+grep -q "^API_URL=" .env || echo "API_URL=http://backend:8000/api" >> .env
 sed -i "s|^DB_HOST=.*|DB_HOST=mysql|" .env
 sed -i "s|^DB_PORT=.*|DB_PORT=3306|" .env
 sed -i "s|^DB_DATABASE=.*|DB_DATABASE=prestamos_db|" .env
