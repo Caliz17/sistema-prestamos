@@ -10,23 +10,43 @@ if [ ! -f ".env" ]; then
     cp .env.example .env
 fi
 
-echo "Configurando .env para Docker..."
+echo "Aplicando configuración del entorno..."
 
-sed -i "s|^APP_URL=.*|APP_URL=http://localhost:8001/api|" .env
-sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env
-echo "API_URL=http://backend:8000/api" >> .env
-grep -q "^API_URL=" .env || echo "API_URL=http://backend:8000/api" >> .env
-sed -i "s|^DB_HOST=.*|DB_HOST=mysql|" .env
-sed -i "s|^DB_PORT=.*|DB_PORT=3306|" .env
-sed -i "s|^DB_DATABASE=.*|DB_DATABASE=prestamos_db|" .env
-sed -i "s|^DB_USERNAME=.*|DB_USERNAME=root|" .env
-sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=root|" .env
-sed -i "s|^SESSION_DRIVER=.*|SESSION_DRIVER=file|" .env
+set_env() {
+    VAR="$1"
+    VAL="$2"
 
+    if grep -q "^$VAR=" .env; then
+        sed -i "s|^$VAR=.*|$VAR=$VAL|" .env
+    else
+        echo "$VAR=$VAL" >> .env
+    fi
+}
+
+# VARIABLES IMPORTANTES
+set_env "APP_URL" "http://localhost:8001"
+set_env "DB_CONNECTION" "mysql"
+set_env "DB_HOST" "mysql"
+set_env "DB_PORT" "3306"
+set_env "DB_DATABASE" "prestamos_db"
+set_env "DB_USERNAME" "root"
+set_env "DB_PASSWORD" "root"
+
+# AQUI PUEDES CAMBIAR EL HOST SEGÚN TU docker-compose.yml
+set_env "API_URL" "http://prestamos-backend:8000/api"
+
+# SESIONES
+set_env "SESSION_DRIVER" "file"
+set_env "SESSION_DOMAIN" "localhost"
+set_env "SESSION_SECURE_COOKIE" "false"
+set_env "SESSION_SAME_SITE" "lax"
+
+echo "Generando APP_KEY..."
 php artisan key:generate --force || true
 
 echo "Esperando MySQL..."
-until nc -z -v -w5 mysql 3306; do
+until nc -z mysql 3306; do
+  echo "Esperando MySQL..."
   sleep 2
 done
 
